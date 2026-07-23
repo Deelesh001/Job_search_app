@@ -1,0 +1,69 @@
+[
+  {
+    "query": "Data Scientist Python Machine Learning",
+    "must_have": [
+      "python"
+    ],
+    "nice_to_have": [
+      "data",
+      "scientist",
+      "machine",
+      "learning",
+      "ai",
+      "ml"
+    ]
+  },
+  {
+    "query": "Remote Backend Java Developer Spring",
+    "must_have": [
+      "java"
+    ],
+    "nice_to_have": [
+      "spring",
+      "backend",
+      "developer",
+      "engineer",
+      "remote"
+    ]
+  },
+  {
+    "query": "DevOps Engineer AWS Kubernetes Docker",
+    "must_have": [],
+    "nice_to_have": [
+      "devops",
+      "kubernetes",
+      "k8s",
+      "aws",
+      "docker",
+      "cloud",
+      "terraform"
+    ]
+  },
+  {
+    "query": "Frontend React TypeScript Web Developer",
+    "must_have": [],
+    "nice_to_have": [
+      "react",
+      "typescript",
+      "javascript",
+      "frontend",
+      "vue",
+      "angular",
+      "web"
+    ]
+  },
+  {
+    "query": "German speaking Project Manager",
+    "must_have": [],
+    "nice_to_have": [
+      "project",
+      "manager",
+      "management",
+      "agile",
+      "scrum",
+      "product",
+      "german",
+      "deutsch"
+    ]
+  }
+]

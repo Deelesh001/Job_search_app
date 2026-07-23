@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Job Information Retrieval System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Job Information Retrieval Prototype</h1>
+            <p>Search using natural language keywords or upload a CV (PDF/DOCX) for hybrid semantic matching.</p>
+        </header>
+
+        <form method="POST" enctype="multipart/form-data" class="search-box">
+            <div class="input-group">
+                <input type="text" name="query" placeholder="e.g., Senior Data Scientist Python Machine Learning" value="{{ query if not query.startswith('[Uploaded CV]') else '' }}">
+            </div>
+            
+            <div class="upload-group">
+                <label for="cv_file">Or Upload Resume (PDF/DOCX):</label>
+                <input type="file" name="cv_file" id="cv_file" accept=".pdf,.docx,.doc,.txt">
+            </div>
+
+            <div class="filter-group">
+                <label for="filter_experience"><strong>Experience Level:</strong></label>
+                <select name="filter_experience" id="filter_experience" style="padding: 5px; margin-right: 20px; font-size: 14px;">
+                    <option value="All" {% if selected_exp == 'All' %}selected{% endif %}>All Levels</option>
+                    <option value="Entry" {% if selected_exp == 'Entry' %}selected{% endif %}>Entry / Student / Junior (0-2 Yrs)</option>
+                    <option value="Mid" {% if selected_exp == 'Mid' %}selected{% endif %}>Mid-Level (2-5 Yrs)</option>
+                    <option value="Senior" {% if selected_exp == 'Senior' %}selected{% endif %}>Senior / Lead (5+ Yrs)</option>
+                </select>
+
+                <label style="margin-left: 15px;">
+                    <input type="checkbox" name="filter_no_german" {% if filter_no_german %}checked{% endif %}>
+                    Exclude jobs requiring German language skills
+                </label>
+            </div>
+
+            <button type="submit" class="btn">Run Hybrid Search</button>
+        </form>
+
+        {% if error %}
+            <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        {% if query %}
+            <div class="results-header">
+                <h2>Top Results for: <em>{{ query }}</em></h2>
+                <span>Showing top {{ results|length }} postings (ranked via Reciprocal Rank Fusion)</span>
+            </div>
+        {% endif %}
+
+        <div class="results-list">
+            {% for job in results %}
+                <div class="job-card">
+                    <div class="job-top">
+                        <h3><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.title }}</a></h3>
+                        <span class="score-badge">RRF: {{ job.score }}</span>
+                    </div>
+                    <div class="job-meta">
+                        <strong>{{ job.company }}</strong> | <span>{{ job.location }}</span> | <span>Source: {{ job.source }}</span> | <span>Posted: {{ job.date_posted }}</span>
+                        <span class="tag-exp tag-{{ job.experience_level|lower }}">{{ job.experience_level }} Level</span>
+                        {% if job.requires_german %}
+                            <span class="tag-german">German Required</span>
+                        {% endif %}
+                    </div>
+                    <p class="snippet">{{ job.snippet }}</p>
+                </div>
+            {% else %}
+                {% if query %}
+                    <p class="no-results">No matching job postings found. Try broadening your keywords or changing filter settings.</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
