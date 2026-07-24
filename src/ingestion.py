@@ -1,9 +1,9 @@
 import os
 import json
-import time
 import requests
 import pandas as pd
 
+# Target endpoints
 ARBEITNOW_URL = "https://www.arbeitnow.com/api/job-board-api"
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
 
@@ -11,29 +11,19 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "raw_jobs_snapshot.json")
 
 
-def fetch_arbeitnow(max_pages=10):
+def fetch_arbeitnow():
     print("Fetching from Arbeitnow...")
     jobs = []
     url = ARBEITNOW_URL
     
-    # Custom User-Agent prevents basic bot blocking
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) StudentIRProject/1.0"}
-    
-    for page in range(1, max_pages + 1):
+    # Grab first 8 pages to get a decent sample size (8,000 jobs)
+    for _ in range(8):
         try:
-            print(f"  -> Grabbing page {page}...")
-            resp = requests.get(url, headers=headers, timeout=10)
-            
-            # If rate limited, wait 5 seconds and retry once
-            if resp.status_code == 429:
-                print("  [!] Rate limit hit (429). Sleeping 5 seconds...")
-                time.sleep(5)
-                resp = requests.get(url, headers=headers, timeout=10)
-                
+            resp = requests.get(url, timeout=10)
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
-            print(f"Arbeitnow fetch stopped at page {page}: {e}")
+            print(f"Arbeitnow request failed: {e}")
             break
             
         for item in data.get("data", []):
@@ -48,12 +38,10 @@ def fetch_arbeitnow(max_pages=10):
                 "category": ", ".join(item.get("tags", []))
             })
             
+        # Pagination check
         url = data.get("links", {}).get("next")
         if not url:
             break
-            
-        # 1.5 second pause between requests to prevent 429 errors
-        time.sleep(1.5)
             
     return jobs
 
@@ -61,10 +49,8 @@ def fetch_arbeitnow(max_pages=10):
 def fetch_remotive():
     print("Fetching from Remotive...")
     jobs = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) StudentIRProject/1.0"}
-    
     try:
-        resp = requests.get(REMOTIVE_URL, headers=headers, timeout=10)
+        resp = requests.get(REMOTIVE_URL, timeout=10)
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
@@ -89,18 +75,20 @@ def fetch_remotive():
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    arbeitnow_jobs = fetch_arbeitnow(max_pages=10)
+    arbeitnow_jobs = fetch_arbeitnow()
     remotive_jobs = fetch_remotive()
     
     all_jobs = arbeitnow_jobs + remotive_jobs
     
+    # Drop empty descriptions or missing titles
     df = pd.DataFrame(all_jobs)
     df = df.dropna(subset=["title", "description"])
     df = df[df["description"].str.strip() != ""]
     
+    # Deduplicate on URL
     df = df.drop_duplicates(subset=["url"]).reset_index(drop=True)
     
-    print(f"\nTotal jobs collected: {len(df)} (Arbeitnow: {len(arbeitnow_jobs)}, Remotive: {len(remotive_jobs)})")
+    print(f"Total jobs collected: {len(df)} (Arbeitnow: {len(arbeitnow_jobs)}, Remotive: {len(remotive_jobs)})")
     
     df.to_json(OUTPUT_FILE, orient="records", indent=2)
     print(f"Saved raw snapshot to {OUTPUT_FILE}")

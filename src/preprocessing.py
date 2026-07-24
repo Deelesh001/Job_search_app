@@ -38,7 +38,7 @@ TRANSLATION_CACHE_PATH = os.path.join(OUTPUT_DIR, "translated_cache.parquet")
 
 
 def setup_translation():
-    installed = argostranslate.translate.get_installed_languages()
+    installed = argostranslate.translate.load_installed_languages()
     de_lang = next((x for x in installed if x.code == "de"), None)
     en_lang = next((x for x in installed if x.code == "en"), None)
     if de_lang and en_lang:
@@ -49,7 +49,7 @@ def setup_translation():
         pkg = next((x for x in packages if x.from_code == "de" and x.to_code == "en"), None)
         if pkg:
             argostranslate.package.install_from_path(pkg.download())
-            installed = argostranslate.translate.get_installed_languages()
+            installed = argostranslate.translate.load_installed_languages()
             de_lang = next((x for x in installed if x.code == "de"), None)
             en_lang = next((x for x in installed if x.code == "en"), None)
     except Exception as e:
